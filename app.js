@@ -3,6 +3,9 @@ const graphqlHttp = require("express-graphql");
 const { buildSchema } = require("graphql"); // buildSchema defines our schema object using a string
 const mongoose = require("mongoose");
 const Event = require("./models/event-model");
+const User = require("./models/user-model");
+const { getAllEvents } = require("./controllers/event-controller");
+const bcrypt = require("bcrypt");
 
 const app = express();
 
@@ -29,12 +32,25 @@ app.use(
         date: String!
     }
 
+    type User {
+      _id: ID!
+      email: String!
+      password: String
+    }
+
+    input UserInput {
+      email: String!
+      password: String!
+    }
+
     type RootQuery {
         events: [Event!]!
+        users: [User!]!
     }
 
     type RootMutation {
-        createEvent(input: EventInput): Event
+        createEvent(eventInput: EventInput): Event
+        createUser(userInput: UserInput): User
     }
 
     schema {
@@ -54,18 +70,45 @@ app.use(
           })
           .catch(console.log());
       },
-      createEvent: ({ input }) => {
+      users: () => {
+        return User.find()
+          .then(result => {
+            console.log(result);
+            return result;
+          })
+          .catch(console.log);
+      },
+      // events: getAllEvents,
+      createEvent: ({ eventInput }) => {
+        const { title, description, price, date } = eventInput;
         const event = new Event({
-          title: input.title,
-          description: input.description,
-          price: +input.price,
-          date: new Date(input.date)
+          title: title,
+          description: description,
+          price: +price,
+          date: new Date(date)
         });
         return event
           .save()
           .then(result => {
-            //console.log(result._doc);
             return result;
+          })
+          .catch(console.log);
+      },
+      createUser: ({ userInput }) => {
+        const { email, password } = userInput;
+        return bcrypt
+          .hash(password, 12)
+          .then(hashedPassword => {
+            const user = new User({
+              email: email,
+              password: hashedPassword
+            });
+            return user.save();
+          })
+          .then(result => {
+            console.log(result);
+            return { ...result, email, password: null };
+            //return result;
           })
           .catch(console.log);
       }
