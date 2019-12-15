@@ -11,6 +11,19 @@ const app = express();
 
 app.use(express.json());
 
+const formattedEvent = events => {};
+
+const formattedUser = userId => {
+  return User.findById(userId)
+    .then(user => {
+      console.log(user, "user");
+      return { ...user };
+    })
+    .catch(err => {
+      throw err;
+    });
+};
+
 app.use(
   "/graphql",
   graphqlHttp({
@@ -23,6 +36,7 @@ app.use(
         description: String!
         price: Float!
         date: String!
+        createdBy: User!
     }
 
     input EventInput {
@@ -36,6 +50,7 @@ app.use(
       _id: ID!
       email: String!
       password: String
+      createdEvents: [Event!]
     }
 
     input UserInput {
@@ -45,7 +60,7 @@ app.use(
 
     type RootQuery {
         events: [Event!]!
-        users: [User!]!
+        users: [User!]
     }
 
     type RootMutation {
@@ -61,10 +76,10 @@ app.use(
     rootValue: {
       // Points to where all resolver functions live. rootValue also known as RESOLVER
       events: () => {
-        // console.log(events, "events");
-        // return events;
         return Event.find()
+          .populate("createdBy")
           .then(result => {
+            //return result;
             console.log(result);
             return result;
           })
@@ -73,7 +88,6 @@ app.use(
       users: () => {
         return User.find()
           .then(result => {
-            console.log(result);
             return result;
           })
           .catch(console.log);
@@ -85,32 +99,47 @@ app.use(
           title: title,
           description: description,
           price: +price,
-          date: new Date(date)
+          date: new Date(date),
+          createdBy: "5df653999d294a2e06cfde03"
         });
         return event
           .save()
           .then(result => {
-            return result;
+            return User.findById("5df653999d294a2e06cfde03");
+          })
+          .then(user => {
+            if (!user) {
+              throw new Error("User not found");
+            }
+            user.createdEvents.push(event);
+            user.save();
+            return event;
           })
           .catch(console.log);
       },
       createUser: ({ userInput }) => {
         const { email, password } = userInput;
-        return bcrypt
-          .hash(password, 12)
+        return User.findOne({ email })
+          .then(user => {
+            if (user) {
+              console.log("oh no");
+              throw new Error("User already exists");
+            }
+            return bcrypt.hash(password, 12);
+          })
           .then(hashedPassword => {
             const user = new User({
-              email: email,
+              email,
               password: hashedPassword
             });
             return user.save();
           })
           .then(result => {
-            console.log(result);
-            return { ...result, email, password: null };
-            //return result;
+            return { ...result, password: null, email };
           })
-          .catch(console.log);
+          .catch(err => {
+            throw err;
+          });
       }
     },
     graphiql: true // Development tool for graphQL. Special URL we can visit to play around with api
