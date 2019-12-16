@@ -1,5 +1,5 @@
-const Event = require("../../models/event-model");
-const User = require("../../models/user-model");
+const Event = require("../../schema-models/event-model");
+const User = require("../../schema-models/user-model");
 const bcrypt = require("bcrypt");
 
 // Below, this function will take an array of event IDs that comes from a user objects 'createdEvents' key. It will return a list of events by that user. Then, it will format the events so that the event.createdBy field is populated with a full user object. We get this object from the formattedUser function.
@@ -8,7 +8,11 @@ const formattedEvents = eventIds => {
   return Event.find({ _id: { $in: eventIds } })
     .then(events => {
       return events.map(event => {
-        return { ...event._doc, createdBy: formattedUser(event.createdBy) };
+        return {
+          ...event._doc,
+          date: new Date(event._doc.date).toISOString(), //Need to do this as date is saved to Mongo as a date object. When parsed back to string it is unreadable.
+          createdBy: formattedUser(event.createdBy)
+        };
       });
     })
     .catch(err => {
@@ -41,6 +45,7 @@ module.exports = {
           return results.map(result => {
             const fullEvent = {
               ...result._doc,
+              date: new Date(event._doc.date).toISOString(),
               createdBy: formattedUser(result.createdBy)
             };
             return fullEvent;
