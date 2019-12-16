@@ -137,7 +137,12 @@ app.use(
             }
             user.createdEvents.push(event);
             user.save();
-            return event;
+            const fullEvent = {
+              ...event._doc,
+              createdBy: formattedUser(event.createdBy)
+            };
+            console.log(fullEvent, "full event log");
+            return fullEvent;
           })
           .catch(console.log);
       },
