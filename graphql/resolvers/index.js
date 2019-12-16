@@ -19,7 +19,17 @@ const formattedEvents = eventIds => {
     .catch(err => {
       throw err;
     });
-  //return {};
+};
+
+// Below I am simply formatting one single event. This is for the booking objects
+const formatSingleEvent = eventId => {
+  return Event.findById(eventId)
+    .then(event => {
+      return { ...event, createdBy: formattedUser(event.createdBy) };
+    })
+    .catch(err => {
+      throw err;
+    });
 };
 
 // The function below will take a userId and then return a full user object. This means that, when searching for an event below, rather than just having the userId in the 'createdBy' field, we will have a full user object. For the user object, we want to configure their createdEvent, so we call the formattedEvents function on them. This means we can deep dive into these objects.
@@ -67,11 +77,15 @@ module.exports = {
   bookings: () => {
     return Booking.find().then(bookings => {
       return bookings.map(booking => {
-        return {
+        const fullBooking = {
           ...booking._doc,
+          user: formattedUser(booking.user),
+          event: formatSingleEvent(booking.event),
           createdAt: new Date(booking._doc.createdAt.toISOString()),
           updatedAt: new Date(booking._doc.updatedAt.toISOString())
         };
+        console.log(fullBooking, "booking");
+        return fullBooking;
       });
     });
   },
@@ -134,7 +148,7 @@ module.exports = {
       .then(event => {
         console.log(event, "event?");
         const booking = new Booking({
-          event: event,
+          event: formatSingleEvent(event),
           user: "5df653999d294a2e06cfde03"
         });
         return booking.save();
@@ -144,6 +158,8 @@ module.exports = {
         return {
           ...booking,
           _id: booking.id,
+          user: formattedUser(booking.user),
+          event: formatSingleEvent(booking.event),
           createdAt: new Date(booking.createdAt.toISOString()),
           updatedAt: new Date(booking.updatedAt.toISOString())
         };
