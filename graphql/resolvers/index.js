@@ -69,18 +69,22 @@ module.exports = {
             return fullEvent;
           });
         })
-        .catch(console.log())
+        .catch(err => {
+          console.log(err);
+          throw err;
+        })
     );
   },
   users: () => {
     return User.find()
       .populate("createdEvents")
       .then(result => {
-        console.log(result, "RESULT");
-        console.log(result._doc, "RESULT._DOC");
         return result;
       })
-      .catch(console.log);
+      .catch(err => {
+        console.log(err);
+        throw err;
+      });
   },
   bookings: () => {
     return Booking.find().then(bookings => {
@@ -116,8 +120,6 @@ module.exports = {
         }
         user.createdEvents.push(event);
         user.save();
-        console.log(event, "EVENT");
-        console.log(event._doc, "EVENT._DOC");
         const fullEvent = {
           ...event._doc,
           createdBy: formattedUser(event.createdBy)
@@ -132,14 +134,14 @@ module.exports = {
       .then(user => {
         if (user) {
           console.log("oh no");
-          throw new Error("User already exists");
+          throw new Error("User already exists"); // First, we are checking if user already exists. If not, we are then hashing their password.
         }
         return bcrypt.hash(password, 12);
       })
       .then(hashedPassword => {
         const user = new User({
           email,
-          password: hashedPassword
+          password: hashedPassword // Here, we are just creating a new user Object
         });
         return user.save();
       })
@@ -152,7 +154,7 @@ module.exports = {
   },
   bookEvent: async ({ eventId }) => {
     let foundEvent;
-    return Event.findById(eventId)
+    return Event.findById(eventId) // Here we need to find the event first before we can add it to Bookings
       .then(event => {
         foundEvent = event;
         const booking = new Booking({
@@ -175,5 +177,20 @@ module.exports = {
         console.log(err, "error");
         throw err;
       });
+  },
+  cancelBooking: async ({ bookingId }) => {
+    try {
+      const booking = await Booking.findById(bookingId).populate("event"); //Finding the right booking and filling up its 'event' field
+      const event = {
+        ...booking.event._doc,
+        createdBy: formattedUser(booking.user), // Creating a new event object here so 'createdBy' is populated.
+        deleted: true
+      };
+      await Booking.deleteOne({ _id: bookingId }); // Deleting booking befroe we return the event it is for
+      return event;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   }
 };
