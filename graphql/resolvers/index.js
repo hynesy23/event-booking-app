@@ -25,7 +25,10 @@ const formattedEvents = eventIds => {
 const formatSingleEvent = eventId => {
   return Event.findById(eventId)
     .then(event => {
-      return { ...event, createdBy: formattedUser(event.createdBy) };
+      return {
+        ...event._doc,
+        createdBy: formattedUser(event.createdBy)
+      };
     })
     .catch(err => {
       throw err;
@@ -55,6 +58,9 @@ module.exports = {
         //.populate("createdBy")  --> Orginally .populate() so createdBy field would be populated with user data. Use 'formattedUser' func to populate this data instead. Means now I've got a full user object for createdBy, rather than just user ID.
         .then(results => {
           return results.map(result => {
+            console.log(result, "RESULT");
+            console.log(result._doc, "RESULT._DOC");
+
             const fullEvent = {
               ...result._doc,
               date: new Date(result._doc.date).toISOString(),
@@ -70,6 +76,8 @@ module.exports = {
     return User.find()
       .populate("createdEvents")
       .then(result => {
+        console.log(result, "RESULT");
+        console.log(result._doc, "RESULT._DOC");
         return result;
       })
       .catch(console.log);
@@ -84,12 +92,10 @@ module.exports = {
           createdAt: new Date(booking._doc.createdAt.toISOString()),
           updatedAt: new Date(booking._doc.updatedAt.toISOString())
         };
-        console.log(fullBooking, "booking");
         return fullBooking;
       });
     });
   },
-  // events: getAllEvents,
   createEvent: ({ eventInput }) => {
     const { title, description, price, date } = eventInput;
     const event = new Event({
@@ -99,7 +105,6 @@ module.exports = {
       date: new Date(date),
       createdBy: "5df653999d294a2e06cfde03"
     });
-    console.log(event, "event log");
     return event
       .save()
       .then(result => {
@@ -111,6 +116,8 @@ module.exports = {
         }
         user.createdEvents.push(event);
         user.save();
+        console.log(event, "EVENT");
+        console.log(event._doc, "EVENT._DOC");
         const fullEvent = {
           ...event._doc,
           createdBy: formattedUser(event.createdBy)
@@ -143,28 +150,29 @@ module.exports = {
         throw err;
       });
   },
-  bookEvent: ({ eventId }) => {
+  bookEvent: async ({ eventId }) => {
+    let foundEvent;
     return Event.findById(eventId)
       .then(event => {
-        console.log(event, "event?");
+        foundEvent = event;
         const booking = new Booking({
-          event: formatSingleEvent(event),
+          event: event,
           user: "5df653999d294a2e06cfde03"
         });
         return booking.save();
       })
       .then(booking => {
-        console.log(booking, "book again");
         return {
           ...booking,
           _id: booking.id,
           user: formattedUser(booking.user),
-          event: formatSingleEvent(booking.event),
+          event: formatSingleEvent(foundEvent),
           createdAt: new Date(booking.createdAt.toISOString()),
           updatedAt: new Date(booking.updatedAt.toISOString())
         };
       })
       .catch(err => {
+        console.log(err, "error");
         throw err;
       });
   }

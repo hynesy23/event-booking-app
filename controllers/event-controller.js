@@ -1,4 +1,4 @@
-const Event = require("../models/event-model");
+const Event = require("../schema-models/event-model");
 
 const getAllEvents = () => {
   console.log("hiiii");

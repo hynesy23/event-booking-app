@@ -41,7 +41,7 @@ module.exports = buildSchema(`
     type RootQuery {
         events: [Event!]!
         users: [User!]!
-        booking: [Booking!]!
+        bookings: [Booking!]!
     }
 
     type RootMutation {
