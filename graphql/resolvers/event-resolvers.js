@@ -1,10 +1,9 @@
 const Event = require("../../schema-models/event-model");
 const User = require("../../schema-models/user-model");
-const { formattedUser, formattedEvents } = require("../../utils/format");
+const { formattedUser } = require("../../utils/format");
 const { dateToString } = require("../../utils/dates");
 
 exports.events = () => {
-  console.log("hey");
   return (
     Event.find()
       //.populate("createdBy")  --> Orginally .populate() so createdBy field would be populated with user data. Use 'formattedUser' func to populate this data instead. Means now I've got a full user object for createdBy, rather than just user ID.
@@ -25,19 +24,23 @@ exports.events = () => {
   );
 };
 
-exports.createEvent = ({ eventInput }) => {
+exports.createEvent = ({ eventInput }, req) => {
+  console.log("event");
+  if (!req.isAuth) {
+    throw new Error("User not authenticated");
+  }
   const { title, description, price, date } = eventInput;
   const event = new Event({
     title: title,
     description: description,
     price: +price,
     date: dateToString(date),
-    createdBy: "5df653999d294a2e06cfde03"
+    createdBy: req.userId
   });
   return event
     .save()
     .then(result => {
-      return User.findById("5df653999d294a2e06cfde03");
+      return User.findById(req.userId);
     })
     .then(user => {
       if (!user) {

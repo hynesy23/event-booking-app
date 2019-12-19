@@ -2,7 +2,10 @@ const Booking = require("../../schema-models/booking-model");
 const Event = require("../../schema-models/event-model");
 const { formattedUser, transformBooking } = require("../../utils/format");
 
-exports.bookings = () => {
+exports.bookings = (args, req) => {
+  if (!req.isAuth) {
+    throw new Error("User not authenticated");
+  }
   return Booking.find()
     .then(bookings => {
       return bookings.map(booking => {
@@ -15,14 +18,17 @@ exports.bookings = () => {
     });
 };
 
-exports.bookEvent = async ({ eventId }) => {
+exports.bookEvent = async ({ eventId }, req) => {
+  if (!req.isAuth) {
+    throw new Error("User not authenticated");
+  }
   let foundEvent;
   return Event.findById(eventId) // Here we need to find the event first before we can add it to Bookings
     .then(event => {
       foundEvent = event;
       const booking = new Booking({
         event: event,
-        user: "5df653999d294a2e06cfde03"
+        user: req.userId
       });
       return booking.save();
     })
@@ -35,7 +41,10 @@ exports.bookEvent = async ({ eventId }) => {
     });
 };
 
-exports.cancelBooking = async ({ bookingId }) => {
+exports.cancelBooking = async ({ bookingId }, req) => {
+  if (!req.isAuth) {
+    throw new Error("User not authenticated");
+  }
   try {
     const booking = await Booking.findById(bookingId).populate("event"); //Finding the right booking and filling up its 'event' field
     const event = {
