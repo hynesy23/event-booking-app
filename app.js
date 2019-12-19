@@ -1,13 +1,15 @@
 const express = require("express");
 const graphqlHttp = require("express-graphql");
 const mongoose = require("mongoose");
-const { getAllEvents } = require("./controllers/event-controller");
 const graphQLSchema = require("./graphql/schema");
 const graphQLResolvers = require("./graphql/resolvers");
+const isAuth = require("./middelware/is-auth");
 
 const app = express();
 
 app.use(express.json());
+
+app.use(isAuth); // Checks authentication for every incoming request
 
 app.use(
   "/graphql",
