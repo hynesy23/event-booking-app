@@ -1,9 +1,8 @@
 const User = require("../../schema-models/user-model");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 exports.users = () => {
-  console.log("hey");
-
   return User.find()
     .populate("createdEvents")
     .then(result => {
@@ -16,6 +15,7 @@ exports.users = () => {
 };
 
 exports.createUser = ({ userInput }) => {
+  console.log("create user");
   const { email, password } = userInput;
   return User.findOne({ email })
     .then(user => {
@@ -38,4 +38,19 @@ exports.createUser = ({ userInput }) => {
     .catch(err => {
       throw err;
     });
+};
+
+exports.login = async ({ email, password }) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new Error("Invalid login credentials");
+  }
+  const isEqual = await bcrypt.compare(password, user.password);
+  if (!isEqual) {
+    throw new Error("Invalid login credentials");
+  }
+  const token = jwt.sign({ userId: user.id, email: user.email }, "asecretkey", {
+    expiresIn: "1h"
+  });
+  return { userId: user.id, token, tokenExpiration: 1 };
 };
