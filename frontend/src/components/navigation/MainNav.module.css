@@ -1,0 +1,48 @@
+.main_nav {
+  display: flex;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 3.5rem;
+  width: 100%;
+  padding: 0 1rem;
+  background-color: rgb(248, 248, 81);
+  align-items: center;
+}
+
+.main_nav_logo h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.main_nav_items {
+  margin-left: 1rem;
+}
+
+.main_nav_items ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.main_nav_items li {
+  margin-left: 1.5rem;
+}
+
+.main_nav_items a {
+  text-decoration: none;
+  color: rgb(243, 134, 134);
+}
+
+.main_nav_items a:hover,
+.main_nav_items a:active {
+  text-decoration: none;
+  color: rgb(241, 14, 14);
+}
+
+.main_nav_items li a.active {
+  text-decoration: none;
+  color: black;
+  border: 1px solid black;
+}
