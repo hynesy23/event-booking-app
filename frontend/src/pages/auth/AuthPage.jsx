@@ -9,7 +9,8 @@ export default class AuthPage extends Component {
     password: "",
     loginMode: true,
     invalidPassword: false,
-    invalidEmail: false
+    invalidEmail: false,
+    err: null
   };
 
   handleChange = event => {
@@ -20,16 +21,42 @@ export default class AuthPage extends Component {
 
   handleSubmit = event => {
     event.preventDefault();
-    const { email, password } = this.state;
-    if (!email.includes("@")) {
-      this.setState({ invalidEmail: true });
-    } else if (password.length < 3) {
-      this.setState({ invalidPassword: true });
-    } else {
+    const {
+      email,
+      password,
+      loginMode,
+      invalidEmail,
+      invalidPassword
+    } = this.state;
+
+    const isPasswordOk = password.length < 3;
+    const isEmailOK = !email.includes("@");
+    // if (password.length < 3) {
+
+    this.setState({
+      invalidPassword: isPasswordOk,
+      invalidEmail: isEmailOK
+    });
+
+    console.log("hii");
+    // }
+
+    // this.setState({ invalidEmail: !email.includes("@")})
+    // if (!email.includes("@")) {
+    //   this.setState({ invalidEmail: true });
+    // } else
+    // if (password.length < 3) {
+    //   this.setState({ invalidPassword: true });
+    // } else {
+
+    if (!invalidPassword && !invalidEmail && !loginMode) {
+      console.log("api call");
       api
-        .logIn(email, password)
+        .createNewUser(email, password)
         .then(result => {
-          console.log(result, "result log");
+          if (result.errors) {
+            this.setState({ err: result.errors[0].message });
+          }
         })
         .catch(err => console.log(err, "err log"));
       this.setState({
@@ -38,21 +65,32 @@ export default class AuthPage extends Component {
         invalidPassword: false,
         invalidEmail: false
       });
+    } else if (!invalidPassword && !invalidEmail && loginMode) {
+      api
+        .siginInUser(email, password)
+        .then()
+        .catch();
+      // Need to add this function to api file.
     }
   };
 
   handleModeSwitch = () => {
-    console.log("hello");
-    const {invalidEmail, invalidPassword} = this.state;
+    console.log("hello mode switch");
+    const { invalidEmail, invalidPassword } = this.state;
     if (invalidEmail || invalidPassword) {
       this.setState(currState => {
-        return { loginMode: !currState.loginMode, email: '', password: '', invalidEmail: false, invalidPassword: false};
+        return {
+          loginMode: !currState.loginMode,
+          email: "",
+          password: "",
+          invalidEmail: false,
+          invalidPassword: false
+        };
       });
-
     } else {
       this.setState(currState => {
-       return {loginMode: !currState.loginMode, email: '', password: ''}
-      })
+        return { loginMode: !currState.loginMode, email: "", password: "" };
+      });
     }
   };
 
@@ -62,11 +100,22 @@ export default class AuthPage extends Component {
       password,
       invalidEmail,
       invalidPassword,
-      loginMode
+      loginMode,
+      err
     } = this.state;
-    
+
     return (
-        <Form handleSubmit={this.handleSubmit} handleChange={this.handleChange} handleModeSwitch={this.handleModeSwitch} invalidEmail={invalidEmail} invalidPassword={invalidPassword} loginMode={loginMode} email={email} password={password} />
+      <Form
+        handleSubmit={this.handleSubmit}
+        handleChange={this.handleChange}
+        handleModeSwitch={this.handleModeSwitch}
+        invalidEmail={invalidEmail}
+        invalidPassword={invalidPassword}
+        loginMode={loginMode}
+        email={email}
+        password={password}
+        err={err}
+      />
     );
   }
 }

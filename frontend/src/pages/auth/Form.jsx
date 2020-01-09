@@ -1,4 +1,6 @@
 import React from "react";
+import Error from "../../components/Error";
+
 import * as styles from "./AuthPage.module.css";
 
 export default function Form({
@@ -9,7 +11,8 @@ export default function Form({
   invalidPassword,
   handleModeSwitch,
   handleChange,
-  handleSubmit
+  handleSubmit,
+  err
 }) {
   return (
     <form onSubmit={handleSubmit} className={styles.auth_form}>
@@ -44,14 +47,20 @@ export default function Form({
       {!loginMode && invalidPassword && (
         <p className={styles.invalid}>Your password is not long enough</p>
       )}
-      {loginMode && invalidPassword && <p className={styles.invalid}>Incorrect signin information</p>}
-      {loginMode && invalidEmail && <p className={styles.invalid}>Incorrect signin information</p>}
+      {(loginMode && invalidPassword) ||
+        (loginMode && invalidEmail && (
+          <p className={styles.invalid}>Incorrect signin information</p>
+        ))}
+      {loginMode && invalidPassword && (
+        <p className={styles.invalid}>Incorrect signin information</p>
+      )}
       <div className={styles.form_actions}>
         <button type="submit">Continue</button>
         <button type="button" onClick={handleModeSwitch}>
           Switch to {loginMode ? "Sign Up" : "Sign In"}
         </button>
       </div>
+      {err && <Error err={err} />}
     </form>
   );
 }
