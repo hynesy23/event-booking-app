@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Form from "./Form";
+import AuthContext from "../../context/AuthContext";
 
 import * as api from "../../api";
 
@@ -12,6 +13,8 @@ export default class AuthPage extends Component {
     invalidEmail: false,
     err: null
   };
+
+  static contextType = AuthContext;
 
   handleChange = event => {
     const value = event.target.value;
@@ -31,7 +34,6 @@ export default class AuthPage extends Component {
 
     const isPasswordOk = password.length < 3;
     const isEmailOK = !email.includes("@");
-    // if (password.length < 3) {
 
     this.setState({
       invalidPassword: isPasswordOk,
@@ -39,23 +41,20 @@ export default class AuthPage extends Component {
     });
 
     console.log("hii");
-    // }
 
-    // this.setState({ invalidEmail: !email.includes("@")})
-    // if (!email.includes("@")) {
-    //   this.setState({ invalidEmail: true });
-    // } else
-    // if (password.length < 3) {
-    //   this.setState({ invalidPassword: true });
-    // } else {
-
-    if (!invalidPassword && !invalidEmail && !loginMode) {
+    if (!invalidPassword && !invalidEmail) {
       console.log("api call");
       api
-        .createNewUser(email, password)
+        .userLoginAction(email, password, loginMode)
         .then(result => {
           if (result.errors) {
             this.setState({ err: result.errors[0].message });
+          }
+          if (loginMode) {
+            this.context.login(
+              result.data.login.token,
+              result.data.login.userId
+            );
           }
         })
         .catch(err => console.log(err, "err log"));
@@ -65,12 +64,6 @@ export default class AuthPage extends Component {
         invalidPassword: false,
         invalidEmail: false
       });
-    } else if (!invalidPassword && !invalidEmail && loginMode) {
-      api
-        .siginInUser(email, password)
-        .then()
-        .catch();
-      // Need to add this function to api file.
     }
   };
 
