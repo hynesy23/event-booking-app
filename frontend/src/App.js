@@ -7,6 +7,8 @@ import EventsPage from "./pages/EventsPage";
 import MainNav from "./components/navigation/MainNav";
 import AuthContext from "./context/AuthContext";
 
+import { navigate } from "@reach/router";
+
 class App extends Component {
   state = {
     token: null,
@@ -20,6 +22,7 @@ class App extends Component {
 
   logout = () => {
     this.setState({ token: null, userId: null });
+    navigate("/auth");
   };
 
   render() {
